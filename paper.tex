@@ -84,20 +84,189 @@ The choices of agents to imitate as opposed to innovate,
 can have a substantial impact on the time taken
 for a good solution to be reached
 and on the quality of the final solution found.
+Specifically there is a trade off between imitation and innovation,
+with more imitation offering good solutions faster
+but more innovation resulting in the better solution in the long run.
 In addition to this,
 the way in which an agent selects a neighbour to copy
-also has a notable impact.
+also has a notable impact
+\cite{monotonic, sociallearning}.
 
-Two possible strategies that could be employed by an agent when deciding
-which neighbour to copy are \emph{best member} and \emph{conformity}
-\cite{sociallearning}.
-The best member imitation strategy
-copies the neighbour with the best solution,
-if this solution is better than the agent's current solution.
-The conformity imitation strategy, on the other hand,
-will imitate one of the neighbours with the modal solution,
-if their is a modal solution
-and if this solution is better than the agent's own solution.
+This existing body of research
+has explored and evaluated strategies developed using heuristic methods.
+Reinforcement learning has the potential to produce novel strategies.
+Not only this, but reinforcement learning could be tasked with
+learning strategies tailored for different problem complexities,
+organisational structures and for given time budgets.
+The differences in these strategies could offer invaluable insights
+into how organisations adapt to different situations.
+
+This paper preposes a way in which the collective learning scenarios
+can be reframed as Finite Markov Decision Processes
+and the preliminary results of a simple Q Learning approach,
+before suggesting further research
+which could be carried out in this area.
+
+
+\section{Model}
+
+An organisations can be modelled as a graph $G(w, e)$
+which is searching for the optimal solution to a given problem,
+where $w$ are the workers and $e$ are the edges between them.
+Here, an edge signifies a collaborative relationship between two workers
+(colleagues).
+
+The problem is modelled as a NK landscape,
+so has an integer solution space with the range $(0, N]$
+and with a complexity increasing with $K$.
+The problems are generated using the method from \cite{monotonic}.
+The score allocated to each solution is passed through a monotonic function,
+which skews scores lower,
+to reflect that the majority of solutions
+to real world problems are poor.
+
+In this problem space,
+individual innovation can be simulated
+by a worker randomly flipping a bit of its current solution.
+A step is only taken if the result of the bit flip is better
+than the solution previously held by the agent.
+
+The organisation solves the problem over discrete time steps
+and the organisation's goal is to achieve
+the best average performance among its workers
+by the deadline.
+The deadline being the maximum number of time steps before an `episode' ends.
+
+
+\section{Markov Decision Process}\label{mdp}
+
+Reframing collective decision making as a Markov Decision Process
+simply involves devising a way to express a worker's state
+and provide actions which a worker is able to perform.
+
+For the preliminary investigation,
+three strategies are available to workers as actions:
+\emph{best member imitation else step},
+\emph{conformity imitation else step} and
+\emph{step else best member imitation}.
+Following the first, a worker would imitate the solution
+of it's colleague with the highest score.
+However, if this colleague's score is not higher
+than the workers current score,
+the worker will innovate taking a step.
+The second is a similar process only the worker will attempt
+to copy a neighbour
+whose score is the same as one or more of the other neighbours.
+Following the third strategy,
+a worker would attempt to find a better solution by taking a random step,
+before attempting to imitate it's best neighbour.
+
+Because the objective is to find a generalisable strategy
+for problems of a given complexity,
+the agent will learn over many different problems.
+Therefore, the information attributed to an agent's position
+on the landscape changes and so is not valuable.
+The time step the worker is in, by contrast, lends itself well to being a state.
+The worker's current score, its best performing colleague's score,
+the mean of all colleagues' scores
+and the variance in all its colleagues' scores
+can all be added as additional dimensions to the state space.
+All of these will provide likely valuable situational awareness to the agent.
+
+This paper makes a distinction between a worker,
+the organisation's components that can carry out an action,
+and the agent,
+the learning algorithm and resulting strategy model shared by all workers.
+
+
+\section{Preliminary Results}\label{results}
+
+For the preliminary experiments,
+the Q learning algorithm \cite{qlearning} was used.
+Initially the state space used was the current score
+and the time step of the worker.
+The worker scores were quantised into 50 levels.
+However, this state space resulted in agents being incredibly slow to train,
+which was likely due to quantisation.
+With few solutions resulting in high scores due to the monotonic function,
+high scores are rare.
+A consequence of this is high score states being updated rarely,
+reducing the agent's ability to learn the best actions to take at higher scores.
+Because of this, the second set of experiments run used time step
+as the only dimension of the state space.
+
+\begin{figure}[htbp]
+    \centering
+    \centerline{\includegraphics[scale=0.58]{figures/version4.pdf}}
+    \caption{
+        The average over 500 episodes of the agents' average score
+        at each time step, with the 95\% confidence intervals
+        plotted as dotted lines.
+        Each episode a had a unique NK Landscape with N = 12 and K = 4
+        and a regular graph with 60 workers each with 4 colleagues.
+    }
+    \label{avscore}
+\end{figure}
+
+The Q learning agent shown in Figure \ref{avscore}
+used a epsilon greedy exploration with a epsilon decay from $1$ of $10^{-8}$,
+had a learning rate of $0.6$ and a discount factor of $0.1$.
+The agent was trained in for regular graph with 60 workers
+each with 4 colleagues, on random NK Landscapes with N = 12 and K = 4,
+and with a deadline of 50 time steps.
+
+After training for 90100 episodes, around 7 hours of training,
+it can be seen to perform marginally better
+than the best of the individual strategies after time step 14.
+
+Although the agent does not show a considerable performance improvement
+over the individual strategies,
+it exbibits a very promising trait.
+It adherence to \emph{conformity imitation then step}
+in the first few time steps,
+a strategy known to keep the number of unique solutions
+high \cite{sociallearning}.
+This suggests the agent has learnt to avoid
+clustering workers into similar solutions early in the episode,
+and seems to have enabled the agent to subsequently outperform
+the individual strategies at time step 15.
+
+The reward was issued at each step as the improvement in the worker's score.
+The agent could be better incentivised to get the maximum score at the deadline,
+by only issuing the final worker score as a reward.
+
+
+\section{Future Work}
+Reinforcement learning show promise
+in its ability to identity good strategies for collective decision making.
+Given more time experimenting with different
+states spaces, actions spaces and learning techniques,
+it is likely that reinforcement learning could offer valuable insights
+into the best strategies to approach different problems with.
+
+Providing agents with the components of a strategy (e.g. \emph{step}) as actions
+and then, once training is complete, the agent can attempt the $n$ actions
+with the highest perceived value in order of value.
+This would allow agents more flexibility in strategy design
+and has the potential to produce more novel strategies.
+
+Environment noise will be a major factor in
+the current Q Learning agent's sluggish learning.
+This noise is due to the generation of a random NK landscapes for each episode,
+each of which can favour very different strategies.
+G Learning \cite{glearning}
+could offer a solution to this problem.
+It mitigates the tendency of Q Learnings to form a bias.
+Not only this, but G Learning allows a prior to be used
+which could be handcrafted heuristics from research.
+
+
+\bibliography{refs}{}
+\bibliographystyle{unsrt}
+
+
+\section{May be useful}
+
 If an agent decides to only search when it fails to find a neighbour to imitate,
 best member imitation will normally find a better solution than
 conformity imitation in shorter time frames.
@@ -106,90 +275,9 @@ best member imitation has a propensity to get stuck in local optima
 due to the increased likelihood of imitation.
 In comparison, conformity imitation gets closer to the global optimum
 normally producing the better solution over a longer time frame.
+\cite{sociallearning}.
 
 
-This illustrates well the trade off between imitation and innovation,
-with more imitation offering good solutions faster
-but more inovation resulting in the better solution in the long run.
-Reinforcement learning could offer valuable insights
-into the best strategies to use for different problem complexities,
-agent network topologies, and for given time budgets.
-This paper preposes a way in which the collective learning scenarios
-can be reframed as Finite Markov Decision Processes
-and the preliminary results of a simple Q Learning approach,
-before suggesting further experimentation
-which could be carried out in this area.
-
-
-
-\section{The Problem Space}
-
-Following the literature, NK problem spaces will be used
-as a proxy for problems faced by organisations of humans.
-The N and K in their name are the two parameters
-used to randomly generate them.
-N is the number of binary traits or bits in the problem's solution space
-and so a solution can be expressed as an integer in the range $(0, N]$.
-K is the degree of epistasis equivalent to the complexity of the problem space,
-as K increases from $0$ to $N-1$,
-the ruggedness of the landscape increases and more local optima are introduced.
-For this application,
-the fitness or score of the solutions are normalised to values between 0 and 1,
-before being passed through a monotonic function
-which skews scores down.
-This is done to reflect that the majority of randomly generated solutions,
-are poor compared to the global optimum
-in the real world problems faced by organisations \cite{monotonic}.
-
-Individual innovation can be simulated by stepping through the solution space
-by randomly flipping a bit of the solution.
-A step is only taken if the resulting solution is better
-than the solution previously held by the agent.
-
-
-\section{Markov Decision Processes}\label{mdp}
-
-A Markov Decision Process is a formalisation of decision making.
-Unlike bandit problems which do not model situations where a decision
-or `action' will effect the subsequent rewards,
-a Markov Decision Process can model delayed rewards.
-This is done by estimating the value function $q^{*}(s, a)$
-which provides the estimated long term reward of action $a$ taken in state $s$,
-as opposed to the stateless value function of bandit problems $q^{*}(a)$
-\cite{RLbook2020}.
-
-Reframing collective decision making as a Markov Decision Process
-simply involves devising a way to express an agent's state
-and provide actions which an agent is able to choose from.
-Because the objective is to find a generalisable strategy
-for problems of a given complexity,
-the agent will learn over many different problems.
-Therefore, the information and value
-attributed to an agent's position on the landscape changes
-and so is not valuable.
-The time step the agent is in lends itself well to being a state.
-For example, if the agents are greedy and all use best member imitation
-at the beginning of a problem, they become clustered on similar solutions,
-limiting their future reward.
-However, at later time steps, best imitation could help bring stragglers
-to more promising areas of the solution space.
-
-Imposing a deadline (a number of time steps before an `episode' ends)
-benefits the formulation
-because it keeps the time space finite
-and, in addition to this, it will allow one to explore
-how the strategy learned by an agent changes with different time budgets,
-an all too real constraint when solving real world problems.
-
-%An alternative when the system does not improve for a few cycles stop.
-
-Additional dimensions which could be added to an agent's state
-are the agent's current score, its best performing neighbours' score,
-the mean of all neighbours' scores
-and the variance in all its neighbours' scores.
-All of these could provide valuable situational awareness to the agent,
-but the quantisation of these additional dimensions into discrete bins
-requires careful consideration as elaborated upon in Section \ref{results}.
 
 Two approaches can be taken when deciding upon
 the actions available to an agent.
@@ -211,6 +299,7 @@ This second approach will probably benefit more from Boltzmann distribution
 off policy learning over a epsilon greedy policy,
 because the actions are more likely to have more similar values.
 
+
 There are also two approaches which can be taken when issuing rewards.
 The agent's final score could be the only reward issued,
 which would lend itself to Monte Carlo learning,
@@ -218,83 +307,18 @@ or the agent's improvement in score could be issued as a reward
 at each time step,
 which would lend itself to learning algorithms such as Q Learning.
 
+As an example, if the workers are greedy and attempt best member imitation
+at the beginning of the episode, they become clustered on similar solutions,
+limiting their future reward.
+However, at later time steps, best imitation could help bring stragglers
+to more promising areas of the solution space.
 
-\section{Preliminary Results}\label{results}
+This paper has focused on using reinforcement learning
+to finding the best strategy
+for a given network and complexity or range of networks and complexities.
+There is also the alternative approach of using reinforcement learning to
+find the optimal network structure for a given strategy.
 
-For the preliminary experiments,
-the Q learning algorithm \cite{qlearning}
-was used for its simplicity.
-Initially a state space of the agent's current score
-and the time step was used.
-The agent's score was linearly quantised into 50 levels.
-However, this state space resulted in poor performance,
-which was likely due to quantisation.
-With few solutions resulting in high scores due to the monotonic function,
-high scores are rare.
-A consequence of this is high score states being updated rarely,
-reducing the agent's ability to learn the best actions to take at higher scores.
-Because of this, the second set of simulations run used time step
-as the only dimension of the state space.
-
-\begin{figure}[htbp]
-    \centering
-    \centerline{\includegraphics[scale=0.6]{figures/version4.pdf}}
-    \caption{
-        The average over 500 episodes of the agents' average score
-        at each time step, with the 95\% confidence intervals
-        plotted as dotted lines.
-        Each episode a had a unique NK Landscape with N = 12 and K = 4
-        and a regular network of agents with 60 vertices each with degree 4.
-    }
-    \label{avscore}
-\end{figure}
-
-The experiment shown in Figure \ref{avscore}
-had a Q learning agent learn the value of three full strategy actions:
-\emph{conformity imitation then step}, \emph{best member imitation then step},
-or \emph{step then best member imitation}.
-The Q learning agents were trained in a regular network with 60 vertices
-each with degree 4, on random NK Landscapes with N = 12 and K = 4,
-and with a deadline of 50 time steps.
-The agent shown in Figure \ref{avscore}
-used a epsilon greedy exploration with a epsilon decay from $1$ of $10^{-8}$,
-had a learning rate of $0.6$ and a discount factor of $0.1$.
-After training for 90100 episodes, around 7 hours of training,
-can be seen to only perform marginally better
-than the best of the original strategies after time step 14.
-
-However, a promising trait of the Q learning agent's strategy is its
-adherence to \emph{conformity imitation then step} in the first few time steps,
-a strategy known to keep the number of unique solutions high.
-This suggests the agent has learnt to avoid
-agent clustering early in the simulation,
-and seems to have enabled the agent to subsequently rise quickly
-to the best solution at time step 15.
-Its ability to hold this lead to the deadline
-may improve with training time.
-
-
-
-
-\section{Future Work}
-Although the strategies produced by reinforcement learning are
-not as capable as was hoped,
-reinforcement learning does show promise
-in its ability to identity good strategies for collective decision making.
-Given more time experimenting with different
-states spaces, actions spaces and learning techniques,
-it is likely that reinforcement learning could offer valuable insights
-into the best strategies to approach different problems with.
-
-Environment noise will be a major factor in
-the current Q Learning agent's sluggish learning.
-This noise is due to the generation of a random NK landscapes for each episode,
-each of which can favour very different strategies.
-G Learning \cite{glearning}
-could offer a solution to this problem.
-It mitigates Q Learnings tendency to form a bias.
-Not only this, but G Learning allows a prior to be used
-which could be devised from heuristic techniques using existing research.
 
 In addition to this,
 some of the different formulations suggested in Section \ref{mdp}
@@ -308,7 +332,6 @@ In a similar vein, different state spaces can be explored,
 such as the agent's score with non-linear quantisation
 which better reflects the frequency different scores.
 
-
 Once reinforcement learning is performing well at high level strategy design,
 one could have separate tables for different positions in the network.
 For example, if the network has a hierarchical structure,
@@ -317,14 +340,6 @@ to the agents at the lower `worker' level.
 This would offer a valuable understanding of the difference in the
 optimal decision making strategy between managers and workers.
 
-This paper has focused on using reinforcement learning
-to finding the best strategy
-for a given network and complexity or range of networks and complexities.
-There is also the alternative approach of using reinforcement learning to
-find the optimal network structure for a given strategy.
 
-
-\bibliography{refs}{}
-\bibliographystyle{unsrt}
 
 \end{document}
