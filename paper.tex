@@ -135,7 +135,7 @@ The organisation solves the problem over discrete time steps
 and the organisation's goal is to achieve
 the best average performance among its workers
 by the deadline.
-The deadline being the maximum number of time steps before an `episode' ends.
+Here, the deadline is the maximum number of time steps before an `episode' ends.
 
 
 \section{Markov Decision Process}\label{mdp}
@@ -150,16 +150,16 @@ three strategies are available to workers as actions:
 \emph{conformity imitation else step} and
 \emph{step else best member imitation}.
 Following the first, a worker would imitate the solution
-of it's colleague with the highest score.
+of its colleague with the highest score.
 However, if this colleague's score is not higher
-than the workers current score,
+than the worker's current score,
 the worker will innovate taking a step.
 The second is a similar process only the worker will attempt
 to copy a neighbour
 whose score is the same as one or more of the other neighbours.
 Following the third strategy,
 a worker would attempt to find a better solution by taking a random step,
-before attempting to imitate it's best neighbour.
+before attempting to imitate its best neighbour.
 
 Because the objective is to find a generalisable strategy
 for problems of a given complexity,
@@ -237,14 +237,15 @@ by only issuing the final worker score as a reward.
 
 
 \section{Future Work}
-Reinforcement learning show promise
+Reinforcement learning shows promise
 in its ability to identity good strategies for collective decision making.
 Given more time experimenting with different
 states spaces, actions spaces and learning techniques,
 it is likely that reinforcement learning could offer valuable insights
 into the best strategies to approach different problems with.
 
-Providing agents with the components of a strategy (e.g. \emph{step}) as actions
+Another potentially promising approach is to provide agents
+with the components of a strategy (e.g. \emph{step}) as actions
 and then, once training is complete, the agent can attempt the $n$ actions
 with the highest perceived value in order of value.
 This would allow agents more flexibility in strategy design
@@ -256,8 +257,8 @@ This noise is due to the generation of a random NK landscapes for each episode,
 each of which can favour very different strategies.
 G Learning \cite{glearning}
 could offer a solution to this problem.
-It mitigates the tendency of Q Learnings to form a bias.
-Not only this, but G Learning allows a prior to be used
+It mitigates the tendency of Q Learning to form a bias.
+Not only this, but G Learning allows a prior to be used,
 which could be handcrafted heuristics from research.
 
 
